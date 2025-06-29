@@ -1,6 +1,10 @@
 import * as d3 from "d3";
 import { useEffect, useRef } from "react";
 import type { DataComponentProps } from "../../App";
+import { getColorScale } from "../../utils/colorScale";
+import { shortenCurrency } from "../../utils";
+import Legend from '../Legend/Legend';
+import { Box } from '@mui/material';
 
 const BarChart = ({
   quarters,
@@ -11,9 +15,9 @@ const BarChart = ({
 
   useEffect(() => {
     if (!quarters.length || !groupingTypes.length) return;
-    const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+    const margin = { top: 40, right: 30, bottom: 20, left: 60 };
     const width = 650 - margin.left - margin.right;
-    const height = 400 - margin.top - margin.bottom;
+    const height = 450 - margin.top - margin.bottom;
 
     // Build data array from props (extract acv for each group/quarter)
     const data = quarters.map((quarter) => {
@@ -53,13 +57,7 @@ const BarChart = ({
       .nice()
       .range([height, 0]);
 
-    const color = d3.scaleOrdinal<string>()
-      .domain(groupingTypes)
-      .range([
-        "#3584BB", "#FF8C26", "#4CAF50", "#A259FF", "#FF5C8A", // original
-        "#FFD600", "#00B8D9", "#FF5630", "#36B37E", "#B47CFF", // new
-        "#FFAB00", "#FF8B94", "#6A4C93", "#43AA8B", "#F3722C"   // more
-      ]);
+    const color = getColorScale(groupingTypes);
 
     svg.selectAll(".bar").remove();
     svg.selectAll(".y-grid").remove();
@@ -174,10 +172,6 @@ const BarChart = ({
         const xVal = x(d.quarter as string);
         const xPos = (typeof xVal === "number" ? xVal : 0) + x.bandwidth() * 0.5;
         const yCenter = y(d.y1) + (y(d.y0) - y(d.y1)) / 2;
-        function formatValue(val: number) {
-          if (val >= 1_000) return ("$" + (val / 1_000).toLocaleString(undefined, { maximumFractionDigits: 2 }) + "K");
-          return "$" + val.toLocaleString();
-        }
         // Always add invisible rect for tooltip events
         d3.select(this)
           .append("rect")
@@ -192,7 +186,7 @@ const BarChart = ({
               .style("display", "block")
               .html(
                 `<span style="display:inline-block;width:12px;height:12px;background:${barColor};border-radius:2px;margin-right:6px;vertical-align:middle;"></span>` +
-                `<strong>${d.key}</strong><br/>Quarter: ${d.quarter}<br/>Value: ${formatValue(d.value)}<br/>Percent: ${Math.round(d.percent)}%`
+                `<strong>${d.key}</strong><br/>Quarter: ${d.quarter}<br/>Value: ${shortenCurrency(d.value)}<br/>Percent: ${Math.round(d.percent)}%`
               )
               .style("left", (event.pageX + 12) + "px")
               .style("top", (event.pageY - 24) + "px");
@@ -209,7 +203,7 @@ const BarChart = ({
             .attr("text-anchor", "middle")
             .attr("fill", "white")
             .style("font-size", "12px")
-            .text(formatValue(d.value));
+            .text(shortenCurrency(d.value));
           d3.select(this)
             .append("text")
             .attr("x", xPos)
@@ -229,20 +223,26 @@ const BarChart = ({
       const yPos = y(total) - 8;
       // Only add label if total > 0
       if (total > 0) {
-        const formatValue = (val: number) => val >= 1_000 ? ("$" + (val / 1_000).toLocaleString(undefined, { maximumFractionDigits: 2 }) + "K") : "$" + val.toLocaleString();
         svg.append("text")
           .attr("x", xPos)
           .attr("y", yPos)
           .attr("text-anchor", "middle")
           .attr("fill", "black")
           .style("font-size", "12px")
-          .text(formatValue(total));
+          .text(shortenCurrency(total));
       }
     });
   }, [quarters, groupingTypes, dataByGroupingType]);
 
+  const color = getColorScale(groupingTypes);
+
   return (
-    <svg ref={svgRef}></svg>
+    <Box>
+      <svg ref={svgRef}></svg>
+      <Box mt={6} display="flex" justifyContent="center">
+        <Legend categories={groupingTypes} colorScale={color} />
+      </Box>
+    </Box>
   );
 };
 export default BarChart;
