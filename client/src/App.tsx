@@ -10,9 +10,6 @@ import { fetchData } from './store/dataSlice';
 import { Box } from '@mui/material';
 import GroupingDropDown from './components/GroupingDropDown/GroupingDropDown';
 import type { Grouping } from './types';
-import Backdrop from '@mui/material/Backdrop';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
 import LoadingOverlay from './components/ui/LoadingOverlay';
 
 export interface DataComponentProps {
