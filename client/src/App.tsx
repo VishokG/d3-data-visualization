@@ -10,6 +10,10 @@ import { fetchData } from './store/dataSlice';
 import { Box } from '@mui/material';
 import GroupingDropDown from './components/GroupingDropDown/GroupingDropDown';
 import type { Grouping } from './types';
+import Backdrop from '@mui/material/Backdrop';
+import CircularProgress from '@mui/material/CircularProgress';
+import Alert from '@mui/material/Alert';
+import LoadingOverlay from './components/ui/LoadingOverlay';
 
 export interface DataComponentProps {
   quarters: string[];
@@ -78,11 +82,10 @@ function App() {
     ])
   );
 
-  if (status === 'loading') return <div>Loading...</div>;
-  if (status === 'failed') return <div>Error: {error}</div>;
-
   return (
     <div className="app-container" style={{ position: 'relative', minHeight: '100vh' }}>
+      <LoadingOverlay open={status === 'loading' || status === 'error'} status={status} />
+
       <Box display="flex" justifyContent="flex-end" alignItems="center" mb={2}>
         <GroupingDropDown
           grouping={grouping}
