@@ -53,7 +53,6 @@ Visit [http://localhost:5173](http://localhost:5173) in your browser. The fronte
 
 - The backend serves data from JSON files in `server/src/data/`.
 - The frontend uses Vite for fast development and hot reloading.
-- Update environment variables as needed in the respective config files.
 
 ## Scripts
 
