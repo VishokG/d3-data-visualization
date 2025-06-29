@@ -11,9 +11,9 @@ const PieChart = ({
   totalsByGroupingType: Record<string, { count: number; acv: number }>;
 }) => {
   // Reduced width and height, and margins
-  const width = 440;
+  const width = 700;
   const height = 350;
-  const margin = { top: 40, right: 30, bottom: 30, left: 160 };
+  const margin = { top: 40, right: 210, bottom: 30, left: 0 };
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
   const svgRef = useRef<SVGSVGElement | null>(null);
