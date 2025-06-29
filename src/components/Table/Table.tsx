@@ -102,52 +102,19 @@ const TotalRow: React.FC<{
   );
 };
 
-const TableComponent = () => {
-  const { quarters, groupingType, totals, dataByGroupingType } = useMemo(() => {
-    const quarters = _.uniq(data.map(d => d.closed_fiscal_quarter));
-    const groupingType = _.uniq(data.map(d => d.category));
+interface TableComponentProps {
+  quarters: string[];
+  groupingTypes: string[];
+  totals: Record<string, { count: number; acv: number }>;
+  dataByGroupingType: Record<string, Array<{ quarter: string; count: number; acv: number; percent: number }>>;
+}
 
-    // Totals for each quarter
-    const totals = _.fromPairs(
-      quarters.map(q => [
-        q,
-        {
-          count: _.sumBy(data, d => d.closed_fiscal_quarter === q ? d.count : 0),
-          acv: _.sumBy(data, d => d.closed_fiscal_quarter === q ? d.acv : 0),
-        }
-      ])
-    );
-
-    // Data for each grouping type: array of { quarter, count, acv, percent }
-    const dataByGroupingType = _.fromPairs(
-      groupingType.map(type => [
-        type,
-        quarters.map(q => {
-          const found = data.find(d => d.closed_fiscal_quarter === q && d.category === type);
-          const count = found ? found.count : 0;
-          const acv = found ? found.acv : 0;
-          const percent = totals[q].acv ? Math.round((acv / totals[q].acv) * 100) : 0;
-          return {
-            quarter: q,
-            count,
-            acv,
-            percent,
-          };
-        })
-      ])
-    );
-
-    return { quarters, groupingType, totals, dataByGroupingType };
-  }, [data]);
-
-  // Error handling for bad data
-  if (
-    !Array.isArray(data) || data.length === 0 ||
-    groupingType.length === 0 ||
-    quarters.length === 0
-  ) {
-    return <Box sx={{ p: 2, color: 'error.main' }}>Data Error/No Data Available.</Box>;
-  }
+const TableComponent = ({
+  quarters,
+  groupingTypes,
+  totals,
+  dataByGroupingType
+}: TableComponentProps) => {
 
   return (
     <Box>
@@ -155,7 +122,7 @@ const TableComponent = () => {
         <Table>
           <TableHeader title={"Cust Type"} quarters={quarters} />
           <TableBody>
-            {groupingType.map((type) => (
+            {groupingTypes.map((type) => (
               <TableBodyRow
                 key={type}
                 type={type}
