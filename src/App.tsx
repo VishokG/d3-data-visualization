@@ -3,8 +3,19 @@ import tableTheme from './components/Table/theme';
 import Table from './components/Table/Table'
 import { useMemo } from 'react';
 import customerTypeData from "./data/Customer Type.json";
+import industryData from "./data/Account Industry.json";
+import acvRangeData from "./data/ACV Range.json";
+import teamData from "./data/Team.json";
 import _ from 'lodash';
 import BarChart from './components/BarChart/BarChart';
+import PieChart from './components/PieChart/PieChart';
+
+export interface DataComponentProps {
+  quarters: string[];
+  groupingTypes: string[];
+  totals: Record<string, { count: number; acv: number }>;
+  dataByGroupingType: Record<string, Array<{ quarter: string; count: number; acv: number; percent: number }>>;
+}
 
 interface DataSet {
   closed_fiscal_quarter: string;
@@ -13,9 +24,24 @@ interface DataSet {
   acv: number;
 }
 
-const groupedData = customerTypeData.map(({Cust_Type, ...d}) => ({
+// const groupedData = customerTypeData.map(({Cust_Type, ...d}) => ({
+//   ...d,
+//   category: Cust_Type,  
+// }))
+
+// const groupedData = industryData.map(({Acct_Industry, ...d}) => ({
+//   ...d,
+//   category: Acct_Industry,  
+// }))
+
+// const groupedData = acvRangeData.map(({ACV_Range, ...d}) => ({
+//   ...d,
+//   category: ACV_Range,  
+// }))
+
+const groupedData = teamData.map(({Team , ...d}) => ({
   ...d,
-  category: Cust_Type,  
+  category: Team,
 }))
 
 const data: DataSet[] = groupedData;
@@ -64,7 +90,12 @@ function App() {
             totals={totals}
           />
         </ThemeProvider> */}
-        <BarChart />
+        <PieChart
+          quarters={quarters}
+          groupingTypes={groupingTypes}
+          dataByGroupingType={dataByGroupingType}
+          totals={totals}
+        />
       </div>
   );
 }
