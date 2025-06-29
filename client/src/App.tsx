@@ -79,6 +79,21 @@ function App() {
     ])
   );
 
+  const getTitle = (key: Grouping) => {
+    switch (key) {
+      case 'industry':
+        return 'Industry';
+      case 'acv_range':
+        return 'ACV Range';
+      case 'customer_type':
+        return 'Customer Type';
+      case 'team':
+        return 'Team';
+      default:
+        return 'Sales Data';
+    }
+  }
+
   return (
     <div className="app-container" style={{ position: 'relative', minHeight: '100vh' }}>
       <LoadingOverlay open={status === 'loading' || status === 'error'} status={status} />
@@ -103,6 +118,7 @@ function App() {
       </div>
       <ThemeProvider theme={tableTheme}>
         <Table
+          title={getTitle(grouping)}
           quarters={quarters}
           groupingTypes={groupingTypes}
           dataByGroupingType={dataByGroupingType}

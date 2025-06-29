@@ -103,6 +103,7 @@ const TotalRow: React.FC<{
 };
 
 interface TableComponentProps {
+  title: string;
   quarters: string[];
   groupingTypes: string[];
   totals: Record<string, { count: number; acv: number }>;
@@ -110,6 +111,7 @@ interface TableComponentProps {
 }
 
 const TableComponent = ({
+  title,
   quarters,
   groupingTypes,
   totals,
@@ -120,7 +122,7 @@ const TableComponent = ({
     <Box>
       <TableContainer>
         <Table>
-          <TableHeader title={"Cust Type"} quarters={quarters} />
+          <TableHeader title={title} quarters={quarters} />
           <TableBody>
             {groupingTypes.map((type) => (
               <TableBodyRow
