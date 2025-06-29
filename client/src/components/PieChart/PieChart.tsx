@@ -1,3 +1,5 @@
+// PieChart component renders a donut-style pie chart using D3.js for visualizing ACV totals by grouping type.
+// It displays each group's value as a slice, with leader lines and percentage labels, and a total in the center.
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { getColorScale } from '../../utils/colorScale';
@@ -20,6 +22,7 @@ const PieChart = ({
 
   const color = getColorScale(groupingTypes);
 
+  // Set up SVG and D3 pie chart logic
   useEffect(() => {
     // Build data array from totalsByGroupingType
     const pieData: { label: string; value: number }[] = groupingTypes.map(type => ({
@@ -60,7 +63,7 @@ const PieChart = ({
     // Generate pie chart data
     const pieDataReady = pie(pieData);
 
-    // Split into left and right side labels
+    // Split into left and right side labels for better label placement
     const leftLabels: {i: number, d: d3.PieArcDatum<{label: string, value: number}>, cy: number}[] = [];
     const rightLabels: {i: number, d: d3.PieArcDatum<{label: string, value: number}>, cy: number}[] = [];
     pieDataReady.forEach((d, i) => {
@@ -135,7 +138,7 @@ const PieChart = ({
       .style('fill', '#000')
       .style('font-size', '12px');
 
-    // Add total at the center
+    // Add total at the center of the donut
     const total = pieData.reduce((sum, d) => sum + d.value, 0);
     svg
       .append('text')
@@ -147,6 +150,7 @@ const PieChart = ({
 
   }, [width, height, groupingTypes, totalsByGroupingType]);
 
+  // Render SVG element for D3 to draw into
   return (
     <svg ref={svgRef}></svg>
   );

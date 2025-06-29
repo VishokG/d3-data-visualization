@@ -1,3 +1,5 @@
+// BarChart component renders a stacked bar chart using D3.js to visualize ACV by grouping type and quarter.
+// It includes tooltips, value/percentage labels, and a legend for group colors.
 import * as d3 from "d3";
 import { useEffect, useRef } from "react";
 import type { DataComponentProps } from "../../App";
@@ -13,6 +15,7 @@ const BarChart = ({
 }: DataComponentProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
+  // Main D3 rendering logic for the bar chart
   useEffect(() => {
     if (!quarters.length || !groupingTypes.length) return;
     const margin = { top: 40, right: 30, bottom: 20, left: 60 };
@@ -105,7 +108,7 @@ const BarChart = ({
       .selectAll("text")
       .style("font-size", "12px");
 
-    // Draw bars
+    // Draw stacked bars for each group and quarter
     svg.selectAll(".bar")
       .data(stackedData)
       .enter()
@@ -146,7 +149,7 @@ const BarChart = ({
         .style("display", "none");
     }
 
-    // Add value and percentage labels
+    // Add tooltips and value/percentage labels inside bars
     svg.selectAll(".bar")
       .data(stackedData)
       .selectAll("g.label-group")
@@ -236,6 +239,7 @@ const BarChart = ({
 
   const color = getColorScale(groupingTypes);
 
+  // Render SVG and legend
   return (
     <Box>
       <svg ref={svgRef}></svg>
