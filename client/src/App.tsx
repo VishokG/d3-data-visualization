@@ -1,14 +1,12 @@
 import { ThemeProvider } from '@mui/material/styles';
 import tableTheme from './components/Table/theme';
 import Table from './components/Table/Table'
-import { useMemo } from 'react';
-import customerTypeData from "./data/Customer Type.json";
-import industryData from "./data/Account Industry.json";
-import acvRangeData from "./data/ACV Range.json";
-import teamData from "./data/Team.json";
+import { useEffect } from 'react';
 import _ from 'lodash';
 import BarChart from './components/BarChart/BarChart';
 import PieChart from './components/PieChart/PieChart';
+import { useAppDispatch, useAppSelector } from './store/hooks';
+import { fetchData } from './store/dataSlice';
 
 export interface DataComponentProps {
   quarters: string[];
@@ -17,36 +15,16 @@ export interface DataComponentProps {
   dataByGroupingType: Record<string, Array<{ quarter: string; count: number; acv: number; percent: number }>>;
 }
 
-interface DataSet {
-  closed_fiscal_quarter: string;
-  category: string;
-  count: number;
-  acv: number;
-}
-
-// const groupedData = customerTypeData.map(({Cust_Type, ...d}) => ({
-//   ...d,
-//   category: Cust_Type,  
-// }))
-
-// const groupedData = industryData.map(({Acct_Industry, ...d}) => ({
-//   ...d,
-//   category: Acct_Industry,  
-// }))
-
-// const groupedData = acvRangeData.map(({ACV_Range, ...d}) => ({
-//   ...d,
-//   category: ACV_Range,  
-// }))
-
-const groupedData = teamData.map(({Team , ...d}) => ({
-  ...d,
-  category: Team,
-}))
-
-const data: DataSet[] = groupedData;
-
 function App() {
+  const dispatch = useAppDispatch();
+  const { data: newData, status, error } = useAppSelector(state => state.data);
+
+  const data = newData.sales || []
+
+  useEffect(() => {
+    dispatch(fetchData('acv_range'));
+  }, [dispatch]);
+
   const quarters = _.uniq(data.map(d => d.closed_fiscal_quarter));
   const groupingTypes = _.uniq(data.map(d => d.category));
 
@@ -94,6 +72,9 @@ function App() {
         ),
     ])
   );
+
+  if (status === 'loading') return <div>Loading...</div>;
+  if (status === 'failed') return <div>Error: {error}</div>;
 
   return (
     <div className="app-container">
