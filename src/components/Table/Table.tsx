@@ -103,9 +103,9 @@ const TotalRow: React.FC<{
 };
 
 const TableComponent = () => {
-  const { quarters, customerTypes, totals, dataByCustomerType } = useMemo(() => {
+  const { quarters, groupingType, totals, dataByGroupingType } = useMemo(() => {
     const quarters = _.uniq(data.map(d => d.closed_fiscal_quarter));
-    const customerTypes = _.uniq(data.map(d => d.category));
+    const groupingType = _.uniq(data.map(d => d.category));
 
     // Totals for each quarter
     const totals = _.fromPairs(
@@ -118,9 +118,9 @@ const TableComponent = () => {
       ])
     );
 
-    // Data for each customer type: array of { quarter, count, acv, percent }
-    const dataByCustomerType = _.fromPairs(
-      customerTypes.map(type => [
+    // Data for each grouping type: array of { quarter, count, acv, percent }
+    const dataByGroupingType = _.fromPairs(
+      groupingType.map(type => [
         type,
         quarters.map(q => {
           const found = data.find(d => d.closed_fiscal_quarter === q && d.category === type);
@@ -137,13 +137,13 @@ const TableComponent = () => {
       ])
     );
 
-    return { quarters, customerTypes, totals, dataByCustomerType };
+    return { quarters, groupingType, totals, dataByGroupingType };
   }, [data]);
 
   // Error handling for bad data
   if (
     !Array.isArray(data) || data.length === 0 ||
-    customerTypes.length === 0 ||
+    groupingType.length === 0 ||
     quarters.length === 0
   ) {
     return <Box sx={{ p: 2, color: 'error.main' }}>Data Error/No Data Available.</Box>;
@@ -155,11 +155,11 @@ const TableComponent = () => {
         <Table>
           <TableHeader title={"Cust Type"} quarters={quarters} />
           <TableBody>
-            {customerTypes.map((type) => (
+            {groupingType.map((type) => (
               <TableBodyRow
                 key={type}
                 type={type}
-                rowData={dataByCustomerType[type]}
+                rowData={dataByGroupingType[type]}
               />
             ))}
             <TotalRow quarters={quarters} totals={totals} />
