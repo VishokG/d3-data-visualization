@@ -6,21 +6,20 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Box from "@mui/material/Box";
-import customerTypeData from "../../data/Customer Type.json";
 import _ from "lodash";
 import { formatCurrency, formatPercent } from "../../utils";
 import tableTheme from "./theme";
 
-interface CustomerTypeRow {
+interface DataRow {
   closed_fiscal_quarter: string;
-  Cust_Type: string;
+  category: string;
   count: number;
   acv: number;
 }
 
-const data: CustomerTypeRow[] = customerTypeData;
+const data: DataRow[] = [];
 
-const TableHeader: React.FC<{ quarters: string[] }> = ({ quarters }) => {
+const TableHeader: React.FC<{ title: string; quarters: string[] }> = ({ title, quarters }) => {
 
   const headerCellSx = { fontWeight: 'bold' };
   const quarterHeaderCellSx = (i: number) => ({
@@ -53,7 +52,7 @@ const TableHeader: React.FC<{ quarters: string[] }> = ({ quarters }) => {
         ))}
       </TableRow>
       <TableRow>
-        <TableCell align="center" sx={headerCellSx} component="th" scope="col">Cust Type</TableCell>
+        <TableCell align="center" sx={headerCellSx} component="th" scope="col">{title}</TableCell>
         {quarters.map((q) => [
           <TableCell key={q + '-opps'} align="center" component="th" scope="col"># of Opps</TableCell>,
           <TableCell key={q + '-acv'} align="center" sx={headerCellSx} component="th" scope="col">ACV</TableCell>,
@@ -106,7 +105,7 @@ const TotalRow: React.FC<{
 const TableComponent = () => {
   const { quarters, customerTypes, totals, dataByCustomerType } = useMemo(() => {
     const quarters = _.uniq(data.map(d => d.closed_fiscal_quarter));
-    const customerTypes = _.uniq(data.map(d => d.Cust_Type));
+    const customerTypes = _.uniq(data.map(d => d.category));
 
     // Totals for each quarter
     const totals = _.fromPairs(
@@ -124,7 +123,7 @@ const TableComponent = () => {
       customerTypes.map(type => [
         type,
         quarters.map(q => {
-          const found = data.find(d => d.closed_fiscal_quarter === q && d.Cust_Type === type);
+          const found = data.find(d => d.closed_fiscal_quarter === q && d.category === type);
           const count = found ? found.count : 0;
           const acv = found ? found.acv : 0;
           const percent = totals[q].acv ? Math.round((acv / totals[q].acv) * 100) : 0;
@@ -154,7 +153,7 @@ const TableComponent = () => {
     <Box>
       <TableContainer>
         <Table>
-          <TableHeader quarters={quarters} />
+          <TableHeader title={"Cust Type"} quarters={quarters} />
           <TableBody>
             {customerTypes.map((type) => (
               <TableBodyRow
