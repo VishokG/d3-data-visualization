@@ -82,20 +82,20 @@ function App() {
 
   return (
       <div>
-        {/* <ThemeProvider theme={tableTheme}>
+        <ThemeProvider theme={tableTheme}>
           <Table
             quarters={quarters}
             groupingTypes={groupingTypes}
             dataByGroupingType={dataByGroupingType}
             totals={totals}
           />
-        </ThemeProvider> */}
-        <PieChart
+        </ThemeProvider>
+        {/* <PieChart
           quarters={quarters}
           groupingTypes={groupingTypes}
           dataByGroupingType={dataByGroupingType}
           totals={totals}
-        />
+        /> */}
       </div>
   );
 }
