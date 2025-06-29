@@ -198,7 +198,7 @@ const BarChart = ({
             tooltip.style("display", "none");
           });
         // Only show text if bar is tall enough
-        if (d.barHeight > 18) {
+        if (d.barHeight > 24) {
           d3.select(this)
             .append("text")
             .attr("x", xPos)
