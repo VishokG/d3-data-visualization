@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import api from '../api';
 import type { DataSet } from '../types';
 
 export interface StoreData {
@@ -25,7 +25,7 @@ const initialState: DataState = {
 export const fetchData = createAsyncThunk<StoreData, string>(
   'data/fetchData',
   async (category: string) => {
-    const response = await axios.get(`http://localhost:3000/api/sales?groupBy=${category}`);
+    const response = await api.get(`/sales?groupBy=${category}`);
     return response.data;
   }
 );
