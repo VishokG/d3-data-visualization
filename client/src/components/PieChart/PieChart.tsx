@@ -1,33 +1,31 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import type { DataComponentProps } from '../../App';
+import { getColorScale } from '../../utils/colorScale';
+import { shortenCurrency } from '../../utils';
 
 const PieChart = ({
-  quarters,
   groupingTypes,
-  dataByGroupingType
-}: DataComponentProps) => {
-  const width = 650;
-  const height = 650;
-
-  // Add margin
-  const equalMarginLength = 200;
-  const margin = { top: 0, right: equalMarginLength, bottom: equalMarginLength, left: equalMarginLength };
+  totalsByGroupingType
+}: {
+  groupingTypes: string[];
+  totalsByGroupingType: Record<string, { count: number; acv: number }>;
+}) => {
+  // Reduced width and height, and margins
+  const width = 440;
+  const height = 350;
+  const margin = { top: 40, right: 30, bottom: 30, left: 160 };
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
   const svgRef = useRef<SVGSVGElement | null>(null);
 
+  const color = getColorScale(groupingTypes);
+
   useEffect(() => {
-    // Build data array from props (sum values for the latest quarter)
-    let pieData: { label: string; value: number }[] = [];
-    if (quarters.length && groupingTypes.length) {
-      const latestQuarter = quarters[quarters.length - 1];
-      pieData = groupingTypes.map(type => {
-        const arr = dataByGroupingType[type] as { quarter: string; acv: number }[];
-        const found = arr?.find(obj => obj.quarter === latestQuarter);
-        return { label: type, value: found ? found.acv : 0 };
-      });
-    }
+    // Build data array from totalsByGroupingType
+    const pieData: { label: string; value: number }[] = groupingTypes.map(type => ({
+      label: type,
+      value: totalsByGroupingType[type]?.acv || 0
+    }));
     // Clear previous content
     d3.select(svgRef.current).selectAll('*').remove();
 
@@ -62,11 +60,36 @@ const PieChart = ({
     // Generate pie chart data
     const pieDataReady = pie(pieData);
 
-    // Color scale
-    const color = d3
-      .scaleOrdinal<string>()
-      .domain(pieData.map((d) => d.label))
-      .range(d3.schemeCategory10);
+    // Split into left and right side labels
+    const leftLabels: {i: number, d: d3.PieArcDatum<{label: string, value: number}>, cy: number}[] = [];
+    const rightLabels: {i: number, d: d3.PieArcDatum<{label: string, value: number}>, cy: number}[] = [];
+    pieDataReady.forEach((d, i) => {
+      const midAngle = d.startAngle + (d.endAngle - d.startAngle) / 2;
+      const centroid = outerArc.centroid(d);
+      if (midAngle < Math.PI) {
+        rightLabels.push({i, d, cy: centroid[1]});
+      } else {
+        leftLabels.push({i, d, cy: centroid[1]});
+      }
+    });
+    // Sort by centroid y to minimize line crossing
+    rightLabels.sort((a, b) => a.cy - b.cy);
+    leftLabels.sort((a, b) => a.cy - b.cy);
+    // Evenly distribute y positions for each side
+    function distributeY(n: number, radius: number) {
+      const step = (radius * 1.8) / (n + 1);
+      return Array.from({length: n}, (_, k) => -radius * 0.9 + step * (k + 1));
+    }
+    const rightYs = distributeY(rightLabels.length, radius);
+    const leftYs = distributeY(leftLabels.length, radius);
+    // Compute label and line positions
+    const labelPositions: [number, number][] = Array(pieDataReady.length);
+    rightLabels.forEach((item, idx) => {
+      labelPositions[item.i] = [radius * 0.99, rightYs[idx]];
+    });
+    leftLabels.forEach((item, idx) => {
+      labelPositions[item.i] = [-radius * 0.99, leftYs[idx]];
+    });
 
     // Draw pie slices
     svg
@@ -79,17 +102,7 @@ const PieChart = ({
       .attr('stroke', 'white')
       .attr('stroke-width', 2);
 
-    // Identify top and bottom sectors
-    const topSectors = pieDataReady
-      .map((d, i) => ({ i, midAngle: d.startAngle + (d.endAngle - d.startAngle) / 2 }))
-      .filter(({ midAngle }) => midAngle < Math.PI / 2 || midAngle > 3 * Math.PI / 2)
-      .map(({ i }) => i);
-    const bottomSectors = pieDataReady
-      .map((d, i) => ({ i, midAngle: d.startAngle + (d.endAngle - d.startAngle) / 2 }))
-      .filter(({ midAngle }) => midAngle > Math.PI / 2 && midAngle < 3 * Math.PI / 2)
-      .map(({ i }) => i);
-
-    // Add leader lines
+    // Draw leader lines
     svg
       .selectAll('polyline')
       .data(pieDataReady)
@@ -101,57 +114,24 @@ const PieChart = ({
       .attr('points', (d, i) => {
         const posA = arc.centroid(d);
         const posB = outerArc.centroid(d);
-        const posC = outerArc.centroid(d);
-        const midAngle = d.startAngle + (d.endAngle - d.startAngle) / 2;
-        let offset = 0;
-        const topIdx = topSectors.indexOf(i);
-        const bottomIdx = bottomSectors.indexOf(i);
-        if (topIdx !== -1) {
-          const spread = 28;
-          offset = (topIdx - (topSectors.length - 1) / 2) * spread;
-        } else if (bottomIdx !== -1) {
-          const spread = 28;
-          offset = (bottomIdx - (bottomSectors.length - 1) / 2) * spread;
-        } else if (midAngle < 2 * Math.PI / 3 || midAngle > 4 * Math.PI / 3) {
-          offset = (i % 2 === 0 ? 1 : -1) * 10;
-        }
-        posB[1] += offset;
-        posC[1] += offset;
-        posC[0] = radius * 0.95 * (midAngle < Math.PI ? 1 : -1);
+        const posC = [labelPositions[i][0], labelPositions[i][1]];
         return [posA, posB, posC].map((p) => p.join(",")).join(" ");
       });
 
-    // Add labels with values
+    // Draw labels
     svg
       .selectAll('text')
       .data(pieDataReady)
       .enter()
       .append('text')
-      .attr('transform', (d, i) => {
-        const pos = outerArc.centroid(d);
-        const midAngle = d.startAngle + (d.endAngle - d.startAngle) / 2;
-        let offset = 0;
-        const topIdx = topSectors.indexOf(i);
-        const bottomIdx = bottomSectors.indexOf(i);
-        if (topIdx !== -1) {
-          const spread = 28;
-          offset = (topIdx - (topSectors.length - 1) / 2) * spread;
-        } else if (bottomIdx !== -1) {
-          const spread = 28;
-          offset = (bottomIdx - (bottomSectors.length - 1) / 2) * spread;
-        } else if (midAngle < 2 * Math.PI / 3 || midAngle > 4 * Math.PI / 3) {
-          offset = (i % 2 === 0 ? 1 : -1) * 10;
-        }
-        pos[0] = radius * 0.99 * (midAngle < Math.PI ? 1 : -1);
-        pos[1] += offset;
-        return `translate(${pos})`;
-      })
+      .attr('transform', (d, i) => `translate(${labelPositions[i]})`)
       .attr('dy', '0.35em')
-      .attr('text-anchor', (d) => {
-        const midAngle = d.startAngle + (d.endAngle - d.startAngle) / 2;
-        return midAngle < Math.PI ? 'start' : 'end';
+      .attr('text-anchor', (d, i) => labelPositions[i][0] > 0 ? 'start' : 'end')
+      .text((d) => {
+        const total = d3.sum(pieDataReady, d => d.data.value);
+        const percent = total ? ((d.data.value / total) * 100).toFixed(1) : 0;
+        return `${shortenCurrency(d.data.value)} (${percent}%)`;
       })
-      .text((d) => `${d.data.label}: ${d.data.value}`)
       .style('fill', '#000')
       .style('font-size', '12px');
 
@@ -161,13 +141,15 @@ const PieChart = ({
       .append('text')
       .attr('text-anchor', 'middle')
       .attr('dy', '0.35em')
-      .text(`Total: $${(total / 1000).toFixed(3)}K`)
+      .text(`Total: ${shortenCurrency(total)}`)
       .style('font-size', '16px')
       .style('fill', '#000');
 
-  }, [width, height, quarters, groupingTypes, dataByGroupingType]);
+  }, [width, height, groupingTypes, totalsByGroupingType]);
 
-  return <svg ref={svgRef}></svg>;
+  return (
+    <svg ref={svgRef}></svg>
+  );
 };
 
 export default PieChart;
