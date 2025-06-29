@@ -1,12 +1,15 @@
 import { ThemeProvider } from '@mui/material/styles';
 import tableTheme from './components/Table/theme';
 import Table from './components/Table/Table'
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import _ from 'lodash';
 import BarChart from './components/BarChart/BarChart';
 import PieChart from './components/PieChart/PieChart';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { fetchData } from './store/dataSlice';
+import { Box } from '@mui/material';
+import GroupingDropDown from './components/GroupingDropDown/GroupingDropDown';
+import type { Grouping } from './types';
 
 export interface DataComponentProps {
   quarters: string[];
@@ -16,14 +19,16 @@ export interface DataComponentProps {
 }
 
 function App() {
+  const [grouping, setGrouping] = useState<Grouping>('industry');
+
   const dispatch = useAppDispatch();
   const { data: newData, status, error } = useAppSelector(state => state.data);
 
-  const data = newData.sales || []
+  const data = newData.sales || [];
 
   useEffect(() => {
-    dispatch(fetchData('acv_range'));
-  }, [dispatch]);
+    dispatch(fetchData(grouping));
+  }, [dispatch, grouping]);
 
   const quarters = _.uniq(data.map(d => d.closed_fiscal_quarter));
   const groupingTypes = _.uniq(data.map(d => d.category));
@@ -77,7 +82,13 @@ function App() {
   if (status === 'failed') return <div>Error: {error}</div>;
 
   return (
-    <div className="app-container">
+    <div className="app-container" style={{ position: 'relative', minHeight: '100vh' }}>
+      <Box display="flex" justifyContent="flex-end" alignItems="center" mb={2}>
+        <GroupingDropDown
+          grouping={grouping}
+          setGrouping={setGrouping}
+        />
+      </Box>
       <div className="charts-container">
         <BarChart
           quarters={quarters}
