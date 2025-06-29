@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import Table from './components/Table/Table'
+
 
 function App() {
   return (
       <div>
-        Hello World
+        <Table />
       </div>
-  )
+  );
 }
 
 export default App
