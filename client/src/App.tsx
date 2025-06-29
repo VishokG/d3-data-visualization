@@ -9,8 +9,6 @@ import teamData from "./data/Team.json";
 import _ from 'lodash';
 import BarChart from './components/BarChart/BarChart';
 import PieChart from './components/PieChart/PieChart';
-import { Box } from '@mui/material';
-import { getColorScale } from './utils/colorScale';
 
 export interface DataComponentProps {
   quarters: string[];
@@ -97,31 +95,29 @@ function App() {
     ])
   );
 
-  const color = getColorScale(groupingTypes);
-
   return (
-      <div>
-        <Box display={"flex"} border={"1px solid black"}>
-          <BarChart
-            quarters={quarters}
-            groupingTypes={groupingTypes}
-            dataByGroupingType={dataByGroupingType}
-            totals={totals}
-          />
-          <PieChart
-            groupingTypes={groupingTypes}
-            totalsByGroupingType={totalsByGroupingType}
-          />
-        </Box>
-        <ThemeProvider theme={tableTheme}>
-          <Table
-            quarters={quarters}
-            groupingTypes={groupingTypes}
-            dataByGroupingType={dataByGroupingType}
-            totals={totals}
-          />
-        </ThemeProvider>
+    <div className="app-container">
+      <div className="charts-container">
+        <BarChart
+          quarters={quarters}
+          groupingTypes={groupingTypes}
+          dataByGroupingType={dataByGroupingType}
+          totals={totals}
+        />
+        <PieChart
+          groupingTypes={groupingTypes}
+          totalsByGroupingType={totalsByGroupingType}
+        />
       </div>
+      <ThemeProvider theme={tableTheme}>
+        <Table
+          quarters={quarters}
+          groupingTypes={groupingTypes}
+          dataByGroupingType={dataByGroupingType}
+          totals={totals}
+        />
+      </ThemeProvider>
+    </div>
   );
 }
 
